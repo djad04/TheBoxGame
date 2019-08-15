@@ -1,12 +1,22 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
+#define SDL_MAIN_HANDLED
+#include "sdl2/include/SDL.h"
+#include "sdl2/include/SDL_image.h"
+#include "sdl2/include/SDL_ttf.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
+
+void erreur(const char *msg, SDL_Window *win, SDL_Renderer *rend) {
+    if (msg) fprintf(stderr, "%s: %s\n", msg, SDL_GetError());
+    if (rend) SDL_DestroyRenderer(rend);
+    if (win) SDL_DestroyWindow(win);
+    SDL_Quit();
+    exit(1);
+}
+
 
 int main(){
 
