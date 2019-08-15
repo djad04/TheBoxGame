@@ -30,6 +30,17 @@ int main(){
         erreur("SDL_Init", NULL, NULL);
         return 1;
     }
+  
+    if (TTF_Init() == -1) {
+        erreur("TTF_Init", NULL, NULL);
+        return 1;
+    }
+
+   
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+        erreur("IMG_Init", NULL, NULL);
+        return 1;
+    }
 
     window = SDL_CreateWindow("Box Puzzle Game",
         SDL_WINDOWPOS_CENTERED,
