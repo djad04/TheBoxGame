@@ -9,12 +9,19 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
-void erreur(const char *msg, SDL_Window *win, SDL_Renderer *rend) {
-    if (msg) fprintf(stderr, "%s: %s\n", msg, SDL_GetError());
-    if (rend) SDL_DestroyRenderer(rend);
-    if (win) SDL_DestroyWindow(win);
+void erreur(char* message, SDL_Window* window, SDL_Renderer* renderer) {
+    char errorMsg[512];
+    sprintf(errorMsg, "ERROR %s: %s\n\nPress any key to exit...", message, SDL_GetError());
+    SDL_Log("%s", errorMsg);
+
+    // Show error in message box
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Game Error", errorMsg, NULL);
+
+    if (renderer != NULL) SDL_DestroyRenderer(renderer);
+    if (window != NULL) SDL_DestroyWindow(window);
+    TTF_Quit();
     SDL_Quit();
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 
