@@ -19,9 +19,12 @@ void erreur(const char *msg, SDL_Window *win, SDL_Renderer *rend) {
 
 
 int main(){
-
-     SDL_Window* window = NULL;
+    SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
+    TTF_Font* font = NULL;
+    SDL_Texture* playerTexture = NULL;
+    SDL_Texture* boxTexture = NULL;
+    SDL_Surface* tempSurface = NULL;
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         erreur("SDL_Init", NULL, NULL);
@@ -43,8 +46,61 @@ int main(){
         return 1;
     }
 
+     // Load player image (sprite sheet)
+    tempSurface = IMG_Load("character.png");
+    if (tempSurface == NULL) {
+        erreur("Failed to load devtous.png", window, renderer);
+        return 1;
+    }
+    playerTexture = SDL_CreateTextureFromSurface(renderer, tempSurface);
+    SDL_FreeSurface(tempSurface);
+    if (playerTexture == NULL) {
+        erreur("Failed to create player texture", window, renderer);
+        return 1;
+    }
+
+    // Load box image
+    tempSurface = IMG_Load("caisse.png");
+    if (tempSurface == NULL) {
+        erreur("Failed to load caisse.png", window, renderer);
+        return 1;
+    }
+    boxTexture = SDL_CreateTextureFromSurface(renderer, tempSurface);
+    SDL_FreeSurface(tempSurface);
+    if (boxTexture == NULL) {
+        erreur("Failed to create box texture", window, renderer);
+        return 1;
+    }
+
+    // Load font
+    font = TTF_OpenFont("WONDERKID.ttf", 48);
+    if (font == NULL) {
+        erreur("TTF_OpenFont", window, renderer);
+        return 1;
+    }
 
 
+    bool running = true;
+    SDL_Event event;
+    const Uint8* keyState = SDL_GetKeyboardState(NULL);
+    Uint32 lastKeyPress = 0;
+    const Uint32 KEY_DELAY = 150; 
+
+    while (running) {
+        
+
+
+
+
+      
+    }
+
+
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    IMG_Quit();
+    TTF_Quit();
+    SDL_Quit();
 
     return 0 ;
 }
