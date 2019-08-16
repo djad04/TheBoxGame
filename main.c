@@ -8,6 +8,25 @@
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
+#define PLAYER_SPEED 5
+#define TILE_SIZE 50
+#define MAX_WALLS 256
+#define PLAYER_HITBOX_INSET_X 10
+#define PLAYER_HITBOX_INSET_Y 6
+
+// Wall structure
+typedef struct {
+    SDL_Rect rect;
+} Wall;
+
+// Level structure
+typedef struct {
+    Wall walls[MAX_WALLS];
+    int wallCount;
+    SDL_Rect target;
+    SDL_Rect playerStart;
+    SDL_Rect boxStart;
+} Level;
 
 void erreur(char* message, SDL_Window* window, SDL_Renderer* renderer) {
     char errorMsg[512];
@@ -22,6 +41,62 @@ void erreur(char* message, SDL_Window* window, SDL_Renderer* renderer) {
     TTF_Quit();
     SDL_Quit();
     exit(EXIT_FAILURE);
+}
+
+void movePlayer(SDL_Rect* player, SDL_Rect* box, int dx, int dy, Level* level) {
+    SDL_Rect newPlayerPos = *player;
+    // Construct a tighter hitbox for collision tests
+    SDL_Rect playerHitbox = {
+        newPlayerPos.x + PLAYER_HITBOX_INSET_X,
+        newPlayerPos.y + PLAYER_HITBOX_INSET_Y,
+        newPlayerPos.w - 2 * PLAYER_HITBOX_INSET_X,
+        newPlayerPos.h - 2 * PLAYER_HITBOX_INSET_Y
+    };
+    newPlayerPos.x += dx;
+    newPlayerPos.y += dy;
+    SDL_Rect newPlayerHitbox = {
+        newPlayerPos.x + PLAYER_HITBOX_INSET_X,
+        newPlayerPos.y + PLAYER_HITBOX_INSET_Y,
+        newPlayerPos.w - 2 * PLAYER_HITBOX_INSET_X,
+        newPlayerPos.h - 2 * PLAYER_HITBOX_INSET_Y
+    };
+
+    // Check if player would collide with walls
+    if (checkWallCollision(&newPlayerHitbox, level)) {
+        return;
+    }
+
+    // Check if player would collide with box
+    if (checkCollision(newPlayerHitbox, *box)) {
+        SDL_Rect newBoxPos = *box;
+        newBoxPos.x += dx;
+        newBoxPos.y += dy;
+
+        // Check if box would collide with walls
+        if (checkWallCollision(&newBoxPos, level)) {
+            return;
+        }
+
+        // Check screen boundaries for box
+        if (newBoxPos.x < 0 || newBoxPos.x + newBoxPos.w > WINDOW_WIDTH ||
+            newBoxPos.y < 0 || newBoxPos.y + newBoxPos.h > WINDOW_HEIGHT) {
+            return;
+        }
+
+        // Move box
+        box->x = newBoxPos.x;
+        box->y = newBoxPos.y;
+    }
+
+    // Check screen boundaries for player
+    if (newPlayerHitbox.x < 0 || newPlayerHitbox.x + newPlayerHitbox.w > WINDOW_WIDTH ||
+        newPlayerHitbox.y < 0 || newPlayerHitbox.y + newPlayerHitbox.h > WINDOW_HEIGHT) {
+        return;
+    }
+
+    // Move player
+    player->x = newPlayerPos.x;
+    player->y = newPlayerPos.y;
 }
 
 
