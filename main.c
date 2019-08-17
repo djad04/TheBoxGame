@@ -37,6 +37,14 @@ typedef struct {
     SDL_Rect boxStart;
 } Level;
 
+static void addWall(Level* level, int x, int y, int w, int h) {
+    if (level->wallCount >= MAX_WALLS) {
+        return;
+    }
+    level->walls[level->wallCount++].rect = (SDL_Rect){ x, y, w, h };
+}
+
+
 
 
 void erreur(char* message, SDL_Window* window, SDL_Renderer* renderer);
@@ -44,7 +52,7 @@ void drawGame(SDL_Renderer* renderer, SDL_Rect* player, SDL_Rect* box, SDL_Rect*
 bool checkCollision(SDL_Rect a, SDL_Rect b);
 bool checkWallCollision(SDL_Rect* rect, Level* level);
 void movePlayer(SDL_Rect* player, SDL_Rect* box, int dx, int dy, Level* level);
-
+void initLevel1(Level* level);
 
 int main(){
     SDL_Window* window = NULL;
@@ -88,7 +96,7 @@ int main(){
      // Load player image (sprite sheet)
     tempSurface = IMG_Load("character.png");
     if (tempSurface == NULL) {
-        erreur("Failed to load devtous.png", window, renderer);
+        erreur("Failed to load character.png", window, renderer);
         return 1;
     }
     playerTexture = SDL_CreateTextureFromSurface(renderer, tempSurface);
@@ -118,6 +126,20 @@ int main(){
         return 1;
     }
 
+       // Player sprite animation state
+    int playerTexW = 0, playerTexH = 0;
+    SDL_QueryTexture(playerTexture, NULL, NULL, &playerTexW, &playerTexH);
+    int playerFrameH = (PLAYER_ROWS > 0) ? (playerTexH / PLAYER_ROWS) : playerTexH;
+    if (playerFrameH <= 0) playerFrameH = playerTexH;
+    int playerFrameW = playerFrameH; // assume square frames
+    int playerNumCols = (playerFrameW > 0) ? (playerTexW / playerFrameW) : 1;
+    if (playerNumCols <= 0) playerNumCols = 1;
+    PlayerDir playerDir = DIR_DOWN;
+    int playerFrameIndex = 0;
+    Uint32 lastAnimTick = 0;
+    SDL_Rect playerSrc = (SDL_Rect){ 0, playerFrameH * playerDir, playerFrameW, playerFrameH };
+    bool isMoving = false;
+
        // Game variables
     int currentLevel = 1;
     Level level1;
@@ -140,11 +162,31 @@ int main(){
                 running = false;
             }
 
-            drawGame(renderer, &player, &box, &playerSrc, currentLevelPtr, font, currentLevel, playerTexture, boxTexture);
+                        currentLevel = 1;
+                        currentLevelPtr = &level1;
+                        player = currentLevelPtr->playerStart;
+                        box = currentLevelPtr->boxStart;
+                        playerDir = DIR_DOWN;
+                        playerFrameIndex = 0;
+                        playerSrc.y = playerFrameH * playerDir;
+                        playerSrc.x = 0;
 
+    // 3. Clear the screen
+    SDL_SetRenderDrawColor(renderer, 18, 18, 0, 255); // black background
+    SDL_RenderClear(renderer);
+
+    // 4. Draw everything
+    drawGame(renderer, &player, &box, &playerSrc, currentLevelPtr, font, currentLevel, playerTexture, boxTexture);
+
+    // 5. Present the renderer
+    SDL_RenderPresent(renderer);
+
+    // 6. Delay or cap frame rate
+    SDL_Delay(16); // ~60 FPS
 
        }
 
+    SDL_RenderPresent(renderer);
     }
 
 
@@ -285,3 +327,37 @@ bool checkWallCollision(SDL_Rect* rect, Level* level) {
     return false;
 }
 
+void initLevel1(Level* level) {
+    level->wallCount = 0;
+
+    // Create border walls
+    // Top wall
+    for (int i = 0; i < WINDOW_WIDTH; i += TILE_SIZE) {
+        addWall(level, i, 0, TILE_SIZE, TILE_SIZE);
+    }
+    // Bottom wall
+    for (int i = 0; i < WINDOW_WIDTH; i += TILE_SIZE) {
+        addWall(level, i, WINDOW_HEIGHT - TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    }
+    // Left wall
+    for (int i = TILE_SIZE; i < WINDOW_HEIGHT - TILE_SIZE; i += TILE_SIZE) {
+        addWall(level, 0, i, TILE_SIZE, TILE_SIZE);
+    }
+    // Right wall
+    for (int i = TILE_SIZE; i < WINDOW_HEIGHT - TILE_SIZE; i += TILE_SIZE) {
+        addWall(level, WINDOW_WIDTH - TILE_SIZE, i, TILE_SIZE, TILE_SIZE);
+    }
+
+    // Add some obstacles
+    addWall(level, 200, 200, TILE_SIZE, TILE_SIZE);
+    addWall(level, 200, 250, TILE_SIZE, TILE_SIZE);
+    addWall(level, 400, 300, TILE_SIZE, TILE_SIZE);
+    addWall(level, 450, 300, TILE_SIZE, TILE_SIZE);
+
+    // Set target position (green square)
+    level->target = (SDL_Rect){ 650, 450, TILE_SIZE, TILE_SIZE };
+
+    // Set starting positions
+    level->playerStart = (SDL_Rect){ 100, 100, 40, 40 };
+    level->boxStart = (SDL_Rect){ 300, 150, TILE_SIZE, TILE_SIZE };
+}
