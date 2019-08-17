@@ -13,6 +13,15 @@
 #define MAX_WALLS 256
 #define PLAYER_HITBOX_INSET_X 10
 #define PLAYER_HITBOX_INSET_Y 6
+#define PLAYER_ROWS 4
+#define PLAYER_ANIM_SPEED_MS 120
+
+typedef enum {
+    DIR_UP = 0,
+    DIR_LEFT = 1,
+    DIR_DOWN = 2,
+    DIR_RIGHT = 3
+} PlayerDir;
 
 // Wall structure
 typedef struct {
@@ -28,76 +37,13 @@ typedef struct {
     SDL_Rect boxStart;
 } Level;
 
-void erreur(char* message, SDL_Window* window, SDL_Renderer* renderer) {
-    char errorMsg[512];
-    sprintf(errorMsg, "ERROR %s: %s\n\nPress any key to exit...", message, SDL_GetError());
-    SDL_Log("%s", errorMsg);
 
-    // Show error in message box
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Game Error", errorMsg, NULL);
 
-    if (renderer != NULL) SDL_DestroyRenderer(renderer);
-    if (window != NULL) SDL_DestroyWindow(window);
-    TTF_Quit();
-    SDL_Quit();
-    exit(EXIT_FAILURE);
-}
-
-void movePlayer(SDL_Rect* player, SDL_Rect* box, int dx, int dy, Level* level) {
-    SDL_Rect newPlayerPos = *player;
-    // Construct a tighter hitbox for collision tests
-    SDL_Rect playerHitbox = {
-        newPlayerPos.x + PLAYER_HITBOX_INSET_X,
-        newPlayerPos.y + PLAYER_HITBOX_INSET_Y,
-        newPlayerPos.w - 2 * PLAYER_HITBOX_INSET_X,
-        newPlayerPos.h - 2 * PLAYER_HITBOX_INSET_Y
-    };
-    newPlayerPos.x += dx;
-    newPlayerPos.y += dy;
-    SDL_Rect newPlayerHitbox = {
-        newPlayerPos.x + PLAYER_HITBOX_INSET_X,
-        newPlayerPos.y + PLAYER_HITBOX_INSET_Y,
-        newPlayerPos.w - 2 * PLAYER_HITBOX_INSET_X,
-        newPlayerPos.h - 2 * PLAYER_HITBOX_INSET_Y
-    };
-
-    // Check if player would collide with walls
-    if (checkWallCollision(&newPlayerHitbox, level)) {
-        return;
-    }
-
-    // Check if player would collide with box
-    if (checkCollision(newPlayerHitbox, *box)) {
-        SDL_Rect newBoxPos = *box;
-        newBoxPos.x += dx;
-        newBoxPos.y += dy;
-
-        // Check if box would collide with walls
-        if (checkWallCollision(&newBoxPos, level)) {
-            return;
-        }
-
-        // Check screen boundaries for box
-        if (newBoxPos.x < 0 || newBoxPos.x + newBoxPos.w > WINDOW_WIDTH ||
-            newBoxPos.y < 0 || newBoxPos.y + newBoxPos.h > WINDOW_HEIGHT) {
-            return;
-        }
-
-        // Move box
-        box->x = newBoxPos.x;
-        box->y = newBoxPos.y;
-    }
-
-    // Check screen boundaries for player
-    if (newPlayerHitbox.x < 0 || newPlayerHitbox.x + newPlayerHitbox.w > WINDOW_WIDTH ||
-        newPlayerHitbox.y < 0 || newPlayerHitbox.y + newPlayerHitbox.h > WINDOW_HEIGHT) {
-        return;
-    }
-
-    // Move player
-    player->x = newPlayerPos.x;
-    player->y = newPlayerPos.y;
-}
+void erreur(char* message, SDL_Window* window, SDL_Renderer* renderer);
+void drawGame(SDL_Renderer* renderer, SDL_Rect* player, SDL_Rect* box, SDL_Rect* playerSrc, Level* level, TTF_Font* font, int currentLevel, SDL_Texture* playerTex, SDL_Texture* boxTex);
+bool checkCollision(SDL_Rect a, SDL_Rect b);
+bool checkWallCollision(SDL_Rect* rect, Level* level);
+void movePlayer(SDL_Rect* player, SDL_Rect* box, int dx, int dy, Level* level);
 
 
 int main(){
@@ -172,6 +118,14 @@ int main(){
         return 1;
     }
 
+       // Game variables
+    int currentLevel = 1;
+    Level level1;
+    Level* currentLevelPtr = &level1;
+
+    // Player and box
+    SDL_Rect player, box;
+
 
     bool running = true;
     SDL_Event event;
@@ -185,6 +139,8 @@ int main(){
             if (event.type == SDL_QUIT) {
                 running = false;
             }
+
+            drawGame(renderer, &player, &box, &playerSrc, currentLevelPtr, font, currentLevel, playerTexture, boxTexture);
 
 
        }
@@ -200,3 +156,132 @@ int main(){
 
     return 0 ;
 }
+
+
+
+
+void erreur(char* message, SDL_Window* window, SDL_Renderer* renderer) {
+    char errorMsg[512];
+    sprintf(errorMsg, "ERROR %s: %s\n\nPress any key to exit...", message, SDL_GetError());
+    SDL_Log("%s", errorMsg);
+
+    // Show error in message box
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Game Error", errorMsg, NULL);
+
+    if (renderer != NULL) SDL_DestroyRenderer(renderer);
+    if (window != NULL) SDL_DestroyWindow(window);
+    TTF_Quit();
+    SDL_Quit();
+    exit(EXIT_FAILURE);
+}
+
+void movePlayer(SDL_Rect* player, SDL_Rect* box, int dx, int dy, Level* level) {
+    SDL_Rect newPlayerPos = *player;
+    // Construct a tighter hitbox for collision tests
+    SDL_Rect playerHitbox = {
+        newPlayerPos.x + PLAYER_HITBOX_INSET_X,
+        newPlayerPos.y + PLAYER_HITBOX_INSET_Y,
+        newPlayerPos.w - 2 * PLAYER_HITBOX_INSET_X,
+        newPlayerPos.h - 2 * PLAYER_HITBOX_INSET_Y
+    };
+    newPlayerPos.x += dx;
+    newPlayerPos.y += dy;
+    SDL_Rect newPlayerHitbox = {
+        newPlayerPos.x + PLAYER_HITBOX_INSET_X,
+        newPlayerPos.y + PLAYER_HITBOX_INSET_Y,
+        newPlayerPos.w - 2 * PLAYER_HITBOX_INSET_X,
+        newPlayerPos.h - 2 * PLAYER_HITBOX_INSET_Y
+    };
+
+    // Check if player would collide with walls
+    if (checkWallCollision(&newPlayerHitbox, level)) {
+        return;
+    }
+
+    // Check if player would collide with box
+    if (checkCollision(newPlayerHitbox, *box)) {
+        SDL_Rect newBoxPos = *box;
+        newBoxPos.x += dx;
+        newBoxPos.y += dy;
+
+        // Check if box would collide with walls
+        if (checkWallCollision(&newBoxPos, level)) {
+            return;
+        }
+
+        // Check screen boundaries for box
+        if (newBoxPos.x < 0 || newBoxPos.x + newBoxPos.w > WINDOW_WIDTH ||
+            newBoxPos.y < 0 || newBoxPos.y + newBoxPos.h > WINDOW_HEIGHT) {
+            return;
+        }
+
+        // Move box
+        box->x = newBoxPos.x;
+        box->y = newBoxPos.y;
+    }
+
+    // Check screen boundaries for player
+    if (newPlayerHitbox.x < 0 || newPlayerHitbox.x + newPlayerHitbox.w > WINDOW_WIDTH ||
+        newPlayerHitbox.y < 0 || newPlayerHitbox.y + newPlayerHitbox.h > WINDOW_HEIGHT) {
+        return;
+    }
+
+    // Move player
+    player->x = newPlayerPos.x;
+    player->y = newPlayerPos.y;
+}
+void drawGame(SDL_Renderer* renderer, SDL_Rect* player, SDL_Rect* box, SDL_Rect* playerSrc, Level* level, TTF_Font* font, int currentLevel, SDL_Texture* playerTex, SDL_Texture* boxTex) {
+    // Draw walls
+    SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+    for (int i = 0; i < level->wallCount; i++) {
+        SDL_RenderFillRect(renderer, &level->walls[i].rect);
+    }
+
+    // Draw target (green square)
+    SDL_SetRenderDrawColor(renderer, 0, 200, 0, 255);
+    SDL_RenderFillRect(renderer, &level->target);
+
+    // Draw box (using image)
+    SDL_RenderCopy(renderer, boxTex, NULL, box);
+
+    // Draw player (sprite sheet frame)
+    SDL_RenderCopy(renderer, playerTex, playerSrc, player);
+
+    // Draw level info
+    SDL_Color white = { 255, 255, 255, 255 };
+    char levelText[50];
+    sprintf(levelText, "Level %d", currentLevel);
+
+    TTF_Font* smallFont = TTF_OpenFont("WONDERKID.ttf", 32);
+    if (smallFont) {
+        SDL_Surface* levelSurface = TTF_RenderText_Solid(smallFont, levelText, white);
+        SDL_Texture* levelTexture = SDL_CreateTextureFromSurface(renderer, levelSurface);
+        SDL_Rect levelRect = { 10, 10, levelSurface->w, levelSurface->h };
+        SDL_RenderCopy(renderer, levelTexture, NULL, &levelRect);
+        SDL_FreeSurface(levelSurface);
+        SDL_DestroyTexture(levelTexture);
+
+        // Instructions
+        SDL_Surface* instrSurface = TTF_RenderText_Solid(smallFont, "R: Reset  ESC: Menu", white);
+        SDL_Texture* instrTexture = SDL_CreateTextureFromSurface(renderer, instrSurface);
+        SDL_Rect instrRect = { 10, 50, instrSurface->w, instrSurface->h };
+        SDL_RenderCopy(renderer, instrTexture, NULL, &instrRect);
+        SDL_FreeSurface(instrSurface);
+        SDL_DestroyTexture(instrTexture);
+
+        TTF_CloseFont(smallFont);
+    }
+}
+bool checkCollision(SDL_Rect a, SDL_Rect b) {
+    return (a.x < b.x + b.w && a.x + a.w > b.x &&
+        a.y < b.y + b.h && a.y + a.h > b.y);
+}
+bool checkWallCollision(SDL_Rect* rect, Level* level) {
+    for (int i = 0; i < level->wallCount; i++) {
+        if (checkCollision(*rect, level->walls[i].rect)) {
+            return true;
+        }
+    }
+    return false;
+}
+
