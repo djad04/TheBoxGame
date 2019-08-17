@@ -161,6 +161,7 @@ int main(){
             if (event.type == SDL_QUIT) {
                 running = false;
             }
+            initLevel1(currentLevelPtr);
 
                         currentLevel = 1;
                         currentLevelPtr = &level1;
@@ -172,6 +173,7 @@ int main(){
                         playerSrc.x = 0;
 
     // 3. Clear the screen
+      
     SDL_SetRenderDrawColor(renderer, 18, 18, 0, 255); // black background
     SDL_RenderClear(renderer);
 
