@@ -62,6 +62,7 @@ void movePlayer(SDL_Rect* player, SDL_Rect* box, int dx, int dy, Level* level);
 void initLevel1(Level* level);
 void drawWinScreen(SDL_Renderer* renderer, TTF_Font* font, int level);
 bool checkWin(SDL_Rect* box, SDL_Rect* target);
+void drawMenu(SDL_Renderer* renderer, TTF_Font* font);
 
 int main(){
     SDL_Window* window = NULL;
@@ -482,4 +483,48 @@ bool checkWin(SDL_Rect* box, SDL_Rect* target) {
     int boxArea = box->w * box->h;
 
     return (overlapArea * 100 / boxArea) >= 75;
+}
+
+void drawMenu(SDL_Renderer* renderer, TTF_Font* font, int selectedOption) {
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color yellow = { 255, 255, 0, 255 };
+   
+    // Title
+    SDL_Surface* titleSurface = TTF_RenderText_Solid(font, "BOX PUZZLE GAME", white);
+    SDL_Texture* titleTexture = SDL_CreateTextureFromSurface(renderer, titleSurface);
+    SDL_Rect titleRect = { WINDOW_WIDTH / 2 - titleSurface->w / 2, 100, titleSurface->w, titleSurface->h };
+    SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
+    SDL_FreeSurface(titleSurface);
+    SDL_DestroyTexture(titleTexture);
+
+    // Start Game option
+    
+    SDL_Color startColor = (selectedOption == 0) ? yellow : white;
+    SDL_Surface* startSurface = TTF_RenderText_Solid(font, "START GAME", startColor);
+    SDL_Texture* startTexture = SDL_CreateTextureFromSurface(renderer, startSurface);
+    SDL_Rect startRect = { WINDOW_WIDTH / 2 - startSurface->w / 2, 300, startSurface->w, startSurface->h };
+    SDL_RenderCopy(renderer, startTexture, NULL, &startRect);
+    SDL_FreeSurface(startSurface);
+    SDL_DestroyTexture(startTexture);
+
+    // Quit option
+    SDL_Color quitColor = (selectedOption == 1) ? yellow : white;
+    SDL_Surface* quitSurface = TTF_RenderText_Solid(font, "QUIT", quitColor);
+    SDL_Texture* quitTexture = SDL_CreateTextureFromSurface(renderer, quitSurface);
+    SDL_Rect quitRect = { WINDOW_WIDTH / 2 - quitSurface->w / 2, 380, quitSurface->w, quitSurface->h };
+    SDL_RenderCopy(renderer, quitTexture, NULL, &quitRect);
+    SDL_FreeSurface(quitSurface);
+    SDL_DestroyTexture(quitTexture);
+
+    // Instructions
+    TTF_Font* smallFont = TTF_OpenFont("WONDERKID.ttf", 24);
+    if (smallFont) {
+        SDL_Surface* instrSurface = TTF_RenderText_Solid(smallFont, "Use Arrow Keys to Navigate, ENTER to Select", white);
+        SDL_Texture* instrTexture = SDL_CreateTextureFromSurface(renderer, instrSurface);
+        SDL_Rect instrRect = { WINDOW_WIDTH / 2 - instrSurface->w / 2, 500, instrSurface->w, instrSurface->h };
+        SDL_RenderCopy(renderer, instrTexture, NULL, &instrRect);
+        SDL_FreeSurface(instrSurface);
+        SDL_DestroyTexture(instrTexture);
+        TTF_CloseFont(smallFont);
+    }
 }
