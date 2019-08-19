@@ -22,6 +22,13 @@ typedef enum {
     DIR_DOWN = 2,
     DIR_RIGHT = 3
 } PlayerDir;
+typedef enum {
+    STATE_MENU,
+    STATE_PLAYING,
+    STATE_WIN,
+    STATE_QUIT
+} GameState;
+
 
 // Wall structure
 typedef struct {
@@ -53,6 +60,8 @@ bool checkCollision(SDL_Rect a, SDL_Rect b);
 bool checkWallCollision(SDL_Rect* rect, Level* level);
 void movePlayer(SDL_Rect* player, SDL_Rect* box, int dx, int dy, Level* level);
 void initLevel1(Level* level);
+void drawWinScreen(SDL_Renderer* renderer, TTF_Font* font, int level);
+bool checkWin(SDL_Rect* box, SDL_Rect* target);
 
 int main(){
     SDL_Window* window = NULL;
@@ -148,50 +157,103 @@ int main(){
     // Player and box
     SDL_Rect player, box;
 
+    GameState gameState = STATE_PLAYING;
+
 
     bool running = true;
     SDL_Event event;
     const Uint8* keyState = SDL_GetKeyboardState(NULL);
     Uint32 lastKeyPress = 0;
     const Uint32 KEY_DELAY = 150; 
+   
+     initLevel1(currentLevelPtr);
+
+
+   player = currentLevelPtr->playerStart;
+    box = currentLevelPtr->boxStart;
 
     while (running) {
         
-       while (SDL_PollEvent(&event)) {
+       // Event handling
+        while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = false;
             }
-            initLevel1(currentLevelPtr);
 
-                        currentLevel = 1;
-                        currentLevelPtr = &level1;
-                        player = currentLevelPtr->playerStart;
-                        box = currentLevelPtr->boxStart;
-                        playerDir = DIR_DOWN;
-                        playerFrameIndex = 0;
-                        playerSrc.y = playerFrameH * playerDir;
-                        playerSrc.x = 0;
-
-    // 3. Clear the screen
       
-    SDL_SetRenderDrawColor(renderer, 18, 18, 0, 255); // black background
-    SDL_RenderClear(renderer);
 
-    // 4. Draw everything
-    drawGame(renderer, &player, &box, &playerSrc, currentLevelPtr, font, currentLevel, playerTexture, boxTexture);
+        // Game logic
+        if (gameState == STATE_PLAYING) {
+            Uint32 currentTime = SDL_GetTicks();
+            isMoving = false;
+            if (currentTime - lastKeyPress > KEY_DELAY) {
+                keyState = SDL_GetKeyboardState(NULL);
 
-    // 5. Present the renderer
-    SDL_RenderPresent(renderer);
+                if (keyState[SDL_SCANCODE_UP]) {
+                    playerDir = DIR_UP;
+                    playerSrc.y = playerFrameH * playerDir;
+                    isMoving = true;
+                    movePlayer(&player, &box, 0, -PLAYER_SPEED, currentLevelPtr);
+                    lastKeyPress = currentTime;
+                }
+                else if (keyState[SDL_SCANCODE_DOWN]) {
+                    playerDir = DIR_DOWN;
+                    playerSrc.y = playerFrameH * playerDir;
+                    isMoving = true;
+                    movePlayer(&player, &box, 0, PLAYER_SPEED, currentLevelPtr);
+                    lastKeyPress = currentTime;
+                }
+                else if (keyState[SDL_SCANCODE_LEFT]) {
+                    playerDir = DIR_LEFT;
+                    playerSrc.y = playerFrameH * playerDir;
+                    isMoving = true;
+                    movePlayer(&player, &box, -PLAYER_SPEED, 0, currentLevelPtr);
+                    lastKeyPress = currentTime;
+                }
+                else if (keyState[SDL_SCANCODE_RIGHT]) {
+                    playerDir = DIR_RIGHT;
+                    playerSrc.y = playerFrameH * playerDir;
+                    isMoving = true;
+                    movePlayer(&player, &box, PLAYER_SPEED, 0, currentLevelPtr);
+                    lastKeyPress = currentTime;
+                }
+            }
 
-    // 6. Delay or cap frame rate
-    SDL_Delay(16); // ~60 FPS
+            
+            if (isMoving && currentTime - lastAnimTick >= PLAYER_ANIM_SPEED_MS) {
+                playerFrameIndex = (playerFrameIndex + 1) % playerNumCols;
+                playerSrc.x = playerFrameW * playerFrameIndex;
+                lastAnimTick = currentTime;
+            }
+            else if (!isMoving) {
+             
+                playerFrameIndex = 0;
+                playerSrc.x = 0;
+            }
 
-       }
+            // Check win condition
+            if (checkWin(&box, &currentLevelPtr->target)) {
+                gameState = STATE_WIN;
+            }
+        }
 
-    SDL_RenderPresent(renderer);
+        // Rendering
+        SDL_SetRenderDrawColor(renderer, 20, 20, 30, 255);
+        SDL_RenderClear(renderer);
+
+    
+        if (gameState == STATE_PLAYING) {
+            drawGame(renderer, &player, &box, &playerSrc, currentLevelPtr, font, currentLevel, playerTexture, boxTexture);
+        }
+        else if (gameState == STATE_WIN) {
+            drawWinScreen(renderer, font, currentLevel);
+        }
+
+        SDL_RenderPresent(renderer);
+        SDL_Delay(16); // ~60 FPS
     }
 
-
+    }
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     IMG_Quit();
@@ -362,4 +424,62 @@ void initLevel1(Level* level) {
     // Set starting positions
     level->playerStart = (SDL_Rect){ 100, 100, 40, 40 };
     level->boxStart = (SDL_Rect){ 300, 150, TILE_SIZE, TILE_SIZE };
+}
+
+void drawWinScreen(SDL_Renderer* renderer, TTF_Font* font, int level) {
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color green = { 0, 255, 0, 255 };
+
+    // Congratulations text
+    SDL_Surface* winSurface = TTF_RenderText_Solid(font, "LEVEL COMPLETE!", green);
+    SDL_Texture* winTexture = SDL_CreateTextureFromSurface(renderer, winSurface);
+    SDL_Rect winRect = { WINDOW_WIDTH / 2 - winSurface->w / 2, 150, winSurface->w, winSurface->h };
+    SDL_RenderCopy(renderer, winTexture, NULL, &winRect);
+    SDL_FreeSurface(winSurface);
+    SDL_DestroyTexture(winTexture);
+
+    // Instructions
+    char instruction[100];
+    if (level < 5) {
+        sprintf(instruction, "Press ENTER for Level %d", level + 1);
+    }
+    else {
+        sprintf(instruction, "Game Complete! Press ENTER for Menu");
+    }
+    SDL_Surface* instrSurface = TTF_RenderText_Solid(font, instruction, white);
+    SDL_Texture* instrTexture = SDL_CreateTextureFromSurface(renderer, instrSurface);
+    SDL_Rect instrRect = { WINDOW_WIDTH / 2 - instrSurface->w / 2, 300, instrSurface->w, instrSurface->h };
+    SDL_RenderCopy(renderer, instrTexture, NULL, &instrRect);
+    SDL_FreeSurface(instrSurface);
+    SDL_DestroyTexture(instrTexture);
+
+    // ESC option
+    TTF_Font* smallFont = TTF_OpenFont("WONDERKID.ttf", 32);
+    if (smallFont) {
+        SDL_Surface* escSurface = TTF_RenderText_Solid(smallFont, "Press ESC for Menu", white);
+        SDL_Texture* escTexture = SDL_CreateTextureFromSurface(renderer, escSurface);
+        SDL_Rect escRect = { WINDOW_WIDTH / 2 - escSurface->w / 2, 400, escSurface->w, escSurface->h };
+        SDL_RenderCopy(renderer, escTexture, NULL, &escRect);
+        SDL_FreeSurface(escSurface);
+        SDL_DestroyTexture(escTexture);
+        TTF_CloseFont(smallFont);
+    }
+}
+
+bool checkWin(SDL_Rect* box, SDL_Rect* target) {
+    // Check if box is mostly on target (at least 75% overlap)
+    int overlapX = (box->x < target->x + target->w && box->x + box->w > target->x);
+    int overlapY = (box->y < target->y + target->h && box->y + box->h > target->y);
+
+    if (!overlapX || !overlapY) return false;
+
+    int overlapLeft = (box->x > target->x) ? box->x : target->x;
+    int overlapRight = (box->x + box->w < target->x + target->w) ? box->x + box->w : target->x + target->w;
+    int overlapTop = (box->y > target->y) ? box->y : target->y;
+    int overlapBottom = (box->y + box->h < target->y + target->h) ? box->y + box->h : target->y + target->h;
+
+    int overlapArea = (overlapRight - overlapLeft) * (overlapBottom - overlapTop);
+    int boxArea = box->w * box->h;
+
+    return (overlapArea * 100 / boxArea) >= 75;
 }
