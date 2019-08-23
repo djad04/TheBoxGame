@@ -60,6 +60,7 @@ bool checkCollision(SDL_Rect a, SDL_Rect b);
 bool checkWallCollision(SDL_Rect* rect, Level* level);
 void movePlayer(SDL_Rect* player, SDL_Rect* box, int dx, int dy, Level* level);
 void initLevel1(Level* level);
+void initLevel2(Level* level);
 void drawWinScreen(SDL_Renderer* renderer, TTF_Font* font, int level);
 bool checkWin(SDL_Rect* box, SDL_Rect* target);
 void drawMenu(SDL_Renderer* renderer, TTF_Font* font, int selectedOption);
@@ -211,7 +212,10 @@ int main(int argc, char** argv) {
                     if (currentLevel < 5) {
                         currentLevel++;
                         
-                    
+                     switch (currentLevel) {
+                            case 2: currentLevelPtr = &level2; break;
+                         
+                        }
                         
                         player = currentLevelPtr->playerStart;
                         box = currentLevelPtr->boxStart;
@@ -596,4 +600,52 @@ void drawMenu(SDL_Renderer* renderer, TTF_Font* font, int selectedOption) {
         SDL_DestroyTexture(instrTexture);
         TTF_CloseFont(smallFont);
     }
+}
+
+
+
+// Initialize Level 2
+void initLevel2(Level* level) {
+    level->wallCount = 0;
+
+    // Create border walls
+    // Top wall
+    for (int i = 0; i < WINDOW_WIDTH; i += TILE_SIZE) {
+        addWall(level, i, 0, TILE_SIZE, TILE_SIZE);
+    }
+    // Bottom wall
+    for (int i = 0; i < WINDOW_WIDTH; i += TILE_SIZE) {
+        addWall(level, i, WINDOW_HEIGHT - TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    }
+    // Left wall
+    for (int i = TILE_SIZE; i < WINDOW_HEIGHT - TILE_SIZE; i += TILE_SIZE) {
+        addWall(level, 0, i, TILE_SIZE, TILE_SIZE);
+    }
+    // Right wall
+    for (int i = TILE_SIZE; i < WINDOW_HEIGHT - TILE_SIZE; i += TILE_SIZE) {
+        addWall(level, WINDOW_WIDTH - TILE_SIZE, i, TILE_SIZE, TILE_SIZE);
+    }
+
+    // Add more complex obstacles for level 2
+    // Horizontal barrier
+    for (int i = 150; i < 500; i += TILE_SIZE) {
+        addWall(level, i, 250, TILE_SIZE, TILE_SIZE);
+    }
+
+    // Vertical barrier
+    for (int i = 100; i < 400; i += TILE_SIZE) {
+        addWall(level, 500, i, TILE_SIZE, TILE_SIZE);
+    }
+
+    // L-shaped obstacle
+    addWall(level, 250, 400, TILE_SIZE, TILE_SIZE);
+    addWall(level, 300, 400, TILE_SIZE, TILE_SIZE);
+    addWall(level, 300, 450, TILE_SIZE, TILE_SIZE);
+
+    // Set target position (green square) - harder to reach
+    level->target = (SDL_Rect){ 100, 450, TILE_SIZE, TILE_SIZE };
+
+    // Set starting positions
+    level->playerStart = (SDL_Rect){ 600, 100, 40, 40 };
+    level->boxStart = (SDL_Rect){ 600, 400, TILE_SIZE, TILE_SIZE };
 }
