@@ -62,9 +62,9 @@ void movePlayer(SDL_Rect* player, SDL_Rect* box, int dx, int dy, Level* level);
 void initLevel1(Level* level);
 void drawWinScreen(SDL_Renderer* renderer, TTF_Font* font, int level);
 bool checkWin(SDL_Rect* box, SDL_Rect* target);
-void drawMenu(SDL_Renderer* renderer, TTF_Font* font);
+void drawMenu(SDL_Renderer* renderer, TTF_Font* font, int selectedOption);
 
-int main(){
+int main(int argc, char** argv) {
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
     TTF_Font* font = NULL;
@@ -72,17 +72,19 @@ int main(){
     SDL_Texture* boxTexture = NULL;
     SDL_Surface* tempSurface = NULL;
 
+    // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         erreur("SDL_Init", NULL, NULL);
         return 1;
     }
-  
+
+    // Initialize TTF
     if (TTF_Init() == -1) {
         erreur("TTF_Init", NULL, NULL);
         return 1;
     }
 
-   
+    // Initialize SDL_image
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
         erreur("IMG_Init", NULL, NULL);
         return 1;
@@ -97,16 +99,18 @@ int main(){
         erreur("SDL_CreateWindow", NULL, NULL);
         return 1;
     }
+
+
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (renderer == NULL) {
         erreur("SDL_CreateRenderer", window, NULL);
         return 1;
     }
 
-     // Load player image (sprite sheet)
+    // Load player image (sprite sheet)
     tempSurface = IMG_Load("character.png");
     if (tempSurface == NULL) {
-        erreur("Failed to load character.png", window, renderer);
+        erreur("Failed to load devtous.png", window, renderer);
         return 1;
     }
     playerTexture = SDL_CreateTextureFromSurface(renderer, tempSurface);
@@ -136,12 +140,19 @@ int main(){
         return 1;
     }
 
-       // Player sprite animation state
+    // Game variables
+    GameState gameState = STATE_MENU;
+    int selectedMenuOption = 0;
+    int currentLevel = 1;
+    Level level1, level2, level3, level4, level5;
+    Level* currentLevelPtr = &level1;
+
+    // Player sprite animation state
     int playerTexW = 0, playerTexH = 0;
     SDL_QueryTexture(playerTexture, NULL, NULL, &playerTexW, &playerTexH);
     int playerFrameH = (PLAYER_ROWS > 0) ? (playerTexH / PLAYER_ROWS) : playerTexH;
     if (playerFrameH <= 0) playerFrameH = playerTexH;
-    int playerFrameW = playerFrameH; // assume square frames
+    int playerFrameW = playerFrameH;
     int playerNumCols = (playerFrameW > 0) ? (playerTexW / playerFrameW) : 1;
     if (playerNumCols <= 0) playerNumCols = 1;
     PlayerDir playerDir = DIR_DOWN;
@@ -150,38 +161,91 @@ int main(){
     SDL_Rect playerSrc = (SDL_Rect){ 0, playerFrameH * playerDir, playerFrameW, playerFrameH };
     bool isMoving = false;
 
-       // Game variables
-    int currentLevel = 1;
-    Level level1;
-    Level* currentLevelPtr = &level1;
+    // Initialize levels
+    initLevel1(&level1);
+
 
     // Player and box
     SDL_Rect player, box;
 
-    GameState gameState = STATE_PLAYING;
-
-
+    // Main game loop
     bool running = true;
     SDL_Event event;
     const Uint8* keyState = SDL_GetKeyboardState(NULL);
     Uint32 lastKeyPress = 0;
     const Uint32 KEY_DELAY = 150; 
-   
-     initLevel1(currentLevelPtr);
-
-
-   player = currentLevelPtr->playerStart;
-    box = currentLevelPtr->boxStart;
 
     while (running) {
-        
-       // Event handling
+        // Event handling
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = false;
             }
 
-      
+            if (gameState == STATE_MENU && event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_UP) {
+                    selectedMenuOption = (selectedMenuOption - 1 + 2) % 2;
+                }
+                else if (event.key.keysym.sym == SDLK_DOWN) {
+                    selectedMenuOption = (selectedMenuOption + 1) % 2;
+                }
+                else if (event.key.keysym.sym == SDLK_RETURN) {
+                    if (selectedMenuOption == 0) {
+                        gameState = STATE_PLAYING;
+                        currentLevel = 1;
+                        currentLevelPtr = &level1;
+                        player = currentLevelPtr->playerStart;
+                        box = currentLevelPtr->boxStart;
+                        playerDir = DIR_DOWN;
+                        playerFrameIndex = 0;
+                        playerSrc.y = playerFrameH * playerDir;
+                        playerSrc.x = 0;
+                    }
+                    else {
+                        running = false;
+                    }
+                }
+            }
+            else if (gameState == STATE_WIN && event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_RETURN) {
+                    if (currentLevel < 5) {
+                        currentLevel++;
+                        
+                    
+                        
+                        player = currentLevelPtr->playerStart;
+                        box = currentLevelPtr->boxStart;
+                        gameState = STATE_PLAYING;
+                        playerDir = DIR_DOWN;
+                        playerFrameIndex = 0;
+                        playerSrc.y = playerFrameH * playerDir;
+                        playerSrc.x = 0;
+                    }
+                    else {
+                        gameState = STATE_MENU;
+                        selectedMenuOption = 0;
+                    }
+                }
+                else if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    gameState = STATE_MENU;
+                    selectedMenuOption = 0;
+                }
+            }
+            else if (gameState == STATE_PLAYING && event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    gameState = STATE_MENU;
+                }
+                else if (event.key.keysym.sym == SDLK_r) {
+             
+                    player = currentLevelPtr->playerStart;
+                    box = currentLevelPtr->boxStart;
+                    playerDir = DIR_DOWN;
+                    playerFrameIndex = 0;
+                    playerSrc.y = playerFrameH * playerDir;
+                    playerSrc.x = 0;
+                }
+            }
+        }
 
         // Game logic
         if (gameState == STATE_PLAYING) {
@@ -220,7 +284,7 @@ int main(){
                 }
             }
 
-            
+        
             if (isMoving && currentTime - lastAnimTick >= PLAYER_ANIM_SPEED_MS) {
                 playerFrameIndex = (playerFrameIndex + 1) % playerNumCols;
                 playerSrc.x = playerFrameW * playerFrameIndex;
@@ -232,7 +296,7 @@ int main(){
                 playerSrc.x = 0;
             }
 
-            // Check win condition
+       
             if (checkWin(&box, &currentLevelPtr->target)) {
                 gameState = STATE_WIN;
             }
@@ -242,8 +306,10 @@ int main(){
         SDL_SetRenderDrawColor(renderer, 20, 20, 30, 255);
         SDL_RenderClear(renderer);
 
-    
-        if (gameState == STATE_PLAYING) {
+        if (gameState == STATE_MENU) {
+            drawMenu(renderer, font, selectedMenuOption);
+        }
+        else if (gameState == STATE_PLAYING) {
             drawGame(renderer, &player, &box, &playerSrc, currentLevelPtr, font, currentLevel, playerTexture, boxTexture);
         }
         else if (gameState == STATE_WIN) {
@@ -254,14 +320,17 @@ int main(){
         SDL_Delay(16); // ~60 FPS
     }
 
-    }
+    // Cleanup
+    SDL_DestroyTexture(playerTexture);
+    SDL_DestroyTexture(boxTexture);
+    TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     IMG_Quit();
     TTF_Quit();
     SDL_Quit();
 
-    return 0 ;
+    return 0;
 }
 
 
