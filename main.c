@@ -164,6 +164,7 @@ int main(int argc, char** argv) {
 
     // Initialize levels
     initLevel1(&level1);
+    initLevel1(&level2);
 
 
     // Player and box
