@@ -759,3 +759,64 @@ void initLevel4(Level* level) {
     level->playerStart = (SDL_Rect){ 550, 400, 40, 40 };
     level->boxStart = (SDL_Rect){ 550, 300, TILE_SIZE, TILE_SIZE };
 }
+
+
+// Initialize Level 5 (Final, most difficult level)
+void initLevel5(Level* level) {
+    level->wallCount = 0;
+
+   
+    for (int i = 0; i < WINDOW_WIDTH; i += TILE_SIZE) {
+        addWall(level, i, 0, TILE_SIZE, TILE_SIZE);
+    }
+  
+    for (int i = 0; i < WINDOW_WIDTH; i += TILE_SIZE) {
+        addWall(level, i, WINDOW_HEIGHT - TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    }
+
+    for (int i = TILE_SIZE; i < WINDOW_HEIGHT - TILE_SIZE; i += TILE_SIZE) {
+        addWall(level, 0, i, TILE_SIZE, TILE_SIZE);
+    }
+
+
+    for (int i = TILE_SIZE; i < WINDOW_HEIGHT - TILE_SIZE; i += TILE_SIZE) {
+        addWall(level, WINDOW_WIDTH - TILE_SIZE, i, TILE_SIZE, TILE_SIZE);
+    }
+
+    //zigzag
+    for (int i = 100; i < 350; i += TILE_SIZE) {
+        addWall(level, i, 150, TILE_SIZE, TILE_SIZE);
+    }
+    for (int i = 150; i < 300; i += TILE_SIZE) {
+        addWall(level, 300, i, TILE_SIZE, TILE_SIZE);
+    }
+    for (int i = 300; i < 550; i += TILE_SIZE) {
+        addWall(level, i, 300, TILE_SIZE, TILE_SIZE);
+    }
+    
+    //zigzag
+    for (int i = 150; i < 400; i += TILE_SIZE) {
+        addWall(level, 150, i, TILE_SIZE, TILE_SIZE);
+    }
+    for (int i = 150; i < 450; i += TILE_SIZE) {
+        addWall(level, i, 400, TILE_SIZE, TILE_SIZE);
+    }
+    for (int i = 400; i < 500; i += TILE_SIZE) {
+        addWall(level, 450, i, TILE_SIZE, TILE_SIZE);
+    }
+
+  
+    addWall(level, 550, 150, TILE_SIZE, TILE_SIZE);
+    addWall(level, 600, 200, TILE_SIZE, TILE_SIZE);
+    addWall(level, 650, 250, TILE_SIZE, TILE_SIZE);
+    addWall(level, 250, 250, TILE_SIZE, TILE_SIZE);
+    addWall(level, 500, 450, TILE_SIZE, TILE_SIZE);
+    addWall(level, 600, 450, TILE_SIZE, TILE_SIZE);
+
+  
+    level->target = (SDL_Rect){ 650, 100, TILE_SIZE, TILE_SIZE };
+
+ 
+    level->playerStart = (SDL_Rect){ 100, 500, 40, 40 };
+    level->boxStart = (SDL_Rect){ 350, 100, TILE_SIZE, TILE_SIZE };
+}
