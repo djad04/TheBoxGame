@@ -650,3 +650,112 @@ void initLevel2(Level* level) {
     level->playerStart = (SDL_Rect){ 600, 100, 40, 40 };
     level->boxStart = (SDL_Rect){ 600, 400, TILE_SIZE, TILE_SIZE };
 }
+
+
+
+// Initialize Level 3
+void initLevel3(Level* level) {
+    level->wallCount = 0;
+
+    // Create border walls
+    // Top wall
+    for (int i = 0; i < WINDOW_WIDTH; i += TILE_SIZE) {
+        addWall(level, i, 0, TILE_SIZE, TILE_SIZE);
+    }
+    // Bottom wall
+    for (int i = 0; i < WINDOW_WIDTH; i += TILE_SIZE) {
+        addWall(level, i, WINDOW_HEIGHT - TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    }
+    // Left wall
+    for (int i = TILE_SIZE; i < WINDOW_HEIGHT - TILE_SIZE; i += TILE_SIZE) {
+        addWall(level, 0, i, TILE_SIZE, TILE_SIZE);
+    }
+    // Right wall
+    for (int i = TILE_SIZE; i < WINDOW_HEIGHT - TILE_SIZE; i += TILE_SIZE) {
+        addWall(level, WINDOW_WIDTH - TILE_SIZE, i, TILE_SIZE, TILE_SIZE);
+    }
+
+    // Maze-like structure
+    // Horizontal walls
+    for (int i = 100; i < 400; i += TILE_SIZE) {
+        addWall(level, i, 150, TILE_SIZE, TILE_SIZE);
+    }
+    for (int i = 400; i < 700; i += TILE_SIZE) {
+        addWall(level, i, 350, TILE_SIZE, TILE_SIZE);
+    }
+    
+    // Vertical walls
+    for (int i = 200; i < 500; i += TILE_SIZE) {
+        addWall(level, 300, i, TILE_SIZE, TILE_SIZE);
+    }
+    for (int i = 100; i < 300; i += TILE_SIZE) {
+        addWall(level, 600, i, TILE_SIZE, TILE_SIZE);
+    }
+
+    // Small obstacles
+    addWall(level, 150, 400, TILE_SIZE, TILE_SIZE);
+    addWall(level, 450, 200, TILE_SIZE, TILE_SIZE);
+    addWall(level, 500, 450, TILE_SIZE, TILE_SIZE);
+
+    // Set target position
+    level->target = (SDL_Rect){ 650, 500, TILE_SIZE, TILE_SIZE };
+
+    // Set starting positions
+    level->playerStart = (SDL_Rect){ 100, 100, 40, 40 };
+    level->boxStart = (SDL_Rect){ 200, 450, TILE_SIZE, TILE_SIZE };
+}
+
+
+
+// Initialize Level 4
+void initLevel4(Level* level) {
+    level->wallCount = 0;
+
+    // Create border walls
+    // Top wall
+    for (int i = 0; i < WINDOW_WIDTH; i += TILE_SIZE) {
+        addWall(level, i, 0, TILE_SIZE, TILE_SIZE);
+    }
+    // Bottom wall
+    for (int i = 0; i < WINDOW_WIDTH; i += TILE_SIZE) {
+        addWall(level, i, WINDOW_HEIGHT - TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    }
+    // Left wall
+    for (int i = TILE_SIZE; i < WINDOW_HEIGHT - TILE_SIZE; i += TILE_SIZE) {
+        addWall(level, 0, i, TILE_SIZE, TILE_SIZE);
+    }
+    // Right wall
+    for (int i = TILE_SIZE; i < WINDOW_HEIGHT - TILE_SIZE; i += TILE_SIZE) {
+        addWall(level, WINDOW_WIDTH - TILE_SIZE, i, TILE_SIZE, TILE_SIZE);
+    }
+
+    // Create a spiral pattern
+    // Outer ring
+    for (int i = 100; i < 700; i += TILE_SIZE) {
+        addWall(level, i, 100, TILE_SIZE, TILE_SIZE);
+        addWall(level, i, 500, TILE_SIZE, TILE_SIZE);
+    }
+    for (int i = 150; i < 500; i += TILE_SIZE) {
+        addWall(level, 100, i, TILE_SIZE, TILE_SIZE);
+        addWall(level, 650, i, TILE_SIZE, TILE_SIZE);
+    }
+
+    // Inner obstacles
+    for (int i = 200; i < 500; i += TILE_SIZE) {
+        addWall(level, 250, i, TILE_SIZE, TILE_SIZE);
+    }
+    for (int i = 300; i < 550; i += TILE_SIZE) {
+        addWall(level, i, 250, TILE_SIZE, TILE_SIZE);
+    }
+    
+    // Gap blockers
+    addWall(level, 450, 350, TILE_SIZE, TILE_SIZE);
+    addWall(level, 450, 400, TILE_SIZE, TILE_SIZE);
+
+    // Set target position (in center)
+    level->target = (SDL_Rect){ 400, 150, TILE_SIZE, TILE_SIZE };
+
+    // Set starting positions
+    level->playerStart = (SDL_Rect){ 550, 400, 40, 40 };
+    level->boxStart = (SDL_Rect){ 550, 300, TILE_SIZE, TILE_SIZE };
+}
