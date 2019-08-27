@@ -164,7 +164,10 @@ int main(int argc, char** argv) {
 
     // Initialize levels
     initLevel1(&level1);
-    initLevel1(&level2);
+    initLevel2(&level2);
+    initLevel3(&level3);
+    initLevel4(&level4);
+    initLevel5(&level5);
 
 
     // Player and box
@@ -213,9 +216,12 @@ int main(int argc, char** argv) {
                     if (currentLevel < 5) {
                         currentLevel++;
                         
-                     switch (currentLevel) {
+                   
+                        switch (currentLevel) {
                             case 2: currentLevelPtr = &level2; break;
-                         
+                            case 3: currentLevelPtr = &level3; break;
+                            case 4: currentLevelPtr = &level4; break;
+                            case 5: currentLevelPtr = &level5; break;
                         }
                         
                         player = currentLevelPtr->playerStart;
