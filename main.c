@@ -8,7 +8,7 @@
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
-#define PLAYER_SPEED 5
+#define PLAYER_SPEED 10
 #define TILE_SIZE 50
 #define MAX_WALLS 256
 #define PLAYER_HITBOX_INSET_X 10
@@ -67,6 +67,7 @@ void initLevel5(Level* level);
 void drawWinScreen(SDL_Renderer* renderer, TTF_Font* font, int level);
 bool checkWin(SDL_Rect* box, SDL_Rect* target);
 void drawMenu(SDL_Renderer* renderer, TTF_Font* font, int selectedOption);
+void initlevels(Level *Level1, Level *Level2, Level *Level3, Level *Level4, Level *Level5);
 
 int main(int argc, char** argv) {
     SDL_Window* window = NULL;
@@ -166,11 +167,7 @@ int main(int argc, char** argv) {
     bool isMoving = false;
 
     // Initialize levels
-    initLevel1(&level1);
-    initLevel2(&level2);
-    initLevel3(&level3);
-    initLevel4(&level4);
-    initLevel5(&level5);
+   initlevels(&level1, &level2, &level3, &level4, &level5);
 
 
     // Player and box
@@ -828,4 +825,13 @@ void initLevel5(Level* level) {
  
     level->playerStart = (SDL_Rect){ 100, 500, 40, 40 };
     level->boxStart = (SDL_Rect){ 350, 100, TILE_SIZE, TILE_SIZE };
+}
+
+
+void initlevels(Level *Level1, Level *Level2, Level *Level3, Level *Level4, Level *Level5) {
+    initLevel1(Level1);
+    initLevel2(Level2);
+    initLevel3(Level3);
+    initLevel4(Level4);
+    initLevel5(Level5);
 }
