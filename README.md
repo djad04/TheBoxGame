@@ -2,6 +2,14 @@
 
 A puzzle game where you push boxes to solve levels. Built with C and SDL2.
 
+## Screenshots
+
+### Main Menu
+![Main Menu](images/mainmenu.png)
+
+### Gameplay
+![Gameplay](images/game.png)
+
 ## Building and Running
 
 1. Create a `build` folder in the project root
