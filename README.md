@@ -24,6 +24,8 @@ gcc main.c -o build/main.exe -I sdl2/include -L sdl2/lib -lSDL2 -lSDL2main -lSDL
 - Arrow keys: Move player
 - R: Reset level
 - Esc: Menu
+## Future Improvements
+- Merge this project with my **2D Map Editor** to create a full sandbox mode where players can design and build their own levels.
 
 ## License
 MIT License 
